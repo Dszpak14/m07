@@ -1,0 +1,310 @@
+import requests
+
+download_url = "https://raw.githubusercontent.com/fivethirtyeight/data/master/nba-elo/nbaallelo.csv"
+target_csv_path = "nba_all_elo.csv"
+
+response = requests.get(download_url)
+response.raise_for_status()    # Check that the request was successful
+with open(target_csv_path, "wb") as f:
+    f.write(response.content)
+print("Download ready.")
+
+import pandas as pd
+nba = pd.read_csv("nba_all_elo.csv")
+type(nba)
+<class 'pandas.core.frame.DataFrame'>
+
+len(nba)
+126314
+nba.shape
+(126314, 23)
+
+pd.set_option("display.max.columns", None)
+
+pd.set_option("display.precision", 2)
+
+nba.tail()
+
+nba.info()
+
+import numpy as np
+nba.describe(include=object)
+
+nba["team_id"].value_counts()
+BOS    5997
+NYK    5769
+LAL    5078
+
+SDS      11
+nba["fran_id"].value_counts()
+Name: team_id, Length: 104, dtype: int64
+Lakers          6024
+Celtics         5997
+Knicks          5769
+
+Huskies           60
+
+nba.loc[nba["fran_id"] == "Lakers", "team_id"].value_counts()
+LAL    5078
+MNL     946
+
+nba["date_played"] = pd.to_datetime(nba["date_game"])
+nba.loc[nba["team_id"] == "MNL", "date_played"].min()
+Timestamp('1948-11-04 00:00:00')
+nba.loc[nba['team_id'] == 'MNL', 'date_played'].max()
+Timestamp('1960-03-26 00:00:00')
+nba.loc[nba["team_id"] == "MNL", "date_played"].agg(("min", "max"))
+min   1948-11-04
+max   1960-03-26
+
+revenues = pd.Series([5555, 7000, 1980])
+revenues
+0    5555
+1    7000
+2    1980
+dtype: int64
+
+revenues.values
+array([5555, 7000, 1980])
+revenues.index
+RangeIndex(start=0, stop=3, step=1)
+
+city_revenues = pd.Series(
+    [4200, 8000, 6500],
+    index=["Amsterdam", "Toronto", "Tokyo"]
+)
+city_revenues
+Amsterdam    4200
+Toronto      8000
+Tokyo        6500
+dtype: int64
+
+city_employee_count = pd.Series({"Amsterdam": 5, "Tokyo": 8})
+city_employee_count
+Amsterdam    5
+Tokyo        8
+dtype: int64
+
+city_employee_count.keys()
+Index(['Amsterdam', 'Tokyo'], dtype='object')
+"Tokyo" in city_employee_count
+True
+"New York" in city_employee_count
+False
+
+city_data = pd.DataFrame({
+    "revenue": city_revenues,
+    "employee_count": city_employee_count
+})
+city_data
+           revenue  employee_count
+Amsterdam     4200             5.0
+Tokyo         6500             8.0
+Toronto       8000             NaN
+
+city_data.index
+Index(['Amsterdam', 'Tokyo', 'Toronto'], dtype='object')
+
+city_data.values
+array([[4.2e+03, 5.0e+00],
+       [6.5e+03, 8.0e+00],
+       [8.0e+03,     nan]])
+
+city_data.axes
+[Index(['Amsterdam', 'Tokyo', 'Toronto'], dtype='object'),
+ Index(['revenue', 'employee_count'], dtype='object')]
+city_data.axes[0]
+ Index(['Amsterdam', 'Tokyo', 'Toronto'], dtype='object')
+city_data.axes[1]
+ Index(['revenue', 'employee_count'], dtype='object')
+
+ >>> city_data.keys()
+Index(['revenue', 'employee_count'], dtype='object')
+"Amsterdam" in city_data
+False
+"revenue" in city_data
+True
+
+
+city_revenues
+Amsterdam    4200
+Toronto      8000
+Tokyo        6500
+dtype: int64
+
+city_revenues["Toronto"]
+8000
+city_revenues[1]
+8000
+
+city_revenues[-1]
+6500
+city_revenues[1:]
+Toronto    8000
+Tokyo      6500
+dtype: int64
+city_revenues["Toronto":]
+Toronto    8000
+Tokyo      6500
+dtype: int64
+
+colors = pd.Series(
+    ["red", "purple", "blue", "green", "yellow"],
+    index=[1, 2, 3, 5, 8]
+)
+colors
+1       red
+2    purple
+3      blue
+5     green
+8    yellow
+dtype: object
+
+colors.loc[1]
+'red'
+colors.iloc[1]
+'purple'
+
+# Return the elements with the implicit index: 1, 2
+colors.iloc[1:3]
+2    purple
+3      blue
+dtype: object
+
+# Return the elements with the explicit index between 3 and 8
+colors.loc[3:8]
+3      blue
+5     green
+8    yellow
+dtype: object
+
+colors.iloc[-2]
+'green'
+
+city_data["revenue"]
+Amsterdam    4200
+Tokyo        6500
+Toronto      8000
+Name: revenue, dtype: int64
+type(city_data["revenue"])
+pandas.core.series.Series
+
+toys = pd.DataFrame([
+    {"name": "ball", "shape": "sphere"},
+    {"name": "Rubik's cube", "shape": "cube"}
+])
+toys["shape"]
+0    sphere
+1      cube
+Name: shape, dtype: object
+toys.shape
+(2, 2)
+
+city_data.loc["Amsterdam"]
+revenue           4200.0
+employee_count       5.0
+Name: Amsterdam, dtype: float64
+city_data.loc["Tokyo": "Toronto"]
+        revenue employee_count
+Tokyo   6500    8.0
+Toronto 8000    NaN
+city_data.iloc[1]
+revenue           6500.0
+employee_count       8.0
+Name: Tokyo, dtype: float64city_data.loc["Amsterdam": "Tokyo", "revenue"]
+Amsterdam    4200
+Tokyo        6500
+Name: revenue, dtype: int64current_decade = nba[nba["year_id"] > 2010]
+current_decade.shape
+(12658, 24)
+games_with_notes = nba[nba["notes"].notnull()]
+games_with_notes.shape
+(5424, 24)
+ers = nba[nba["fran_id"].str.endswith("ers")]
+ers.shape
+(27797, 24)
+nba[
+    (nba["_iscopy"] == 0) &
+    (nba["pts"] > 100) &
+    (nba["opp_pts"] > 100) &
+    (nba["team_id"] == "BLB")
+]
+city_revenues.sum()
+18700
+city_revenues.max()
+8000
+
+points = nba["pts"]
+type(points)
+<class 'pandas.core.series.Series'>
+points.sum()
+12976235
+
+nba.groupby("fran_id", sort=False)["pts"].sum()
+fran_id
+Huskies           3995
+Knicks          582497
+Stags            20398
+Falcons           3797
+Capitols         22387
+nba[
+    (nba["fran_id"] == "Spurs") &
+    (nba["year_id"] > 2010)
+].groupby(["year_id", "game_result"])["game_id"].count()
+year_id  game_result
+2011     L              25
+         W              63
+2012     L              20
+         W              60
+2013     L              30
+         W              73
+2014     L              27
+         W              78
+2015     L              31
+         W              58
+         >>> df = nba.copy()
+df.shape
+renamed_df = df.rename(
+    columns={"game_result": "result", "game_location": "location"}
+)
+renamed_df.info()
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 126314 entries, 0 to 126313
+Data columns (total 25 columns):
+ #   Column       Non-Null Count   Dtype
+---  ------       --------------   -----
+ 0   gameorder    126314 non-null  int64
+ ...       
+ 19  location     126314 non-null  object
+ 20  result       126314 non-null  object
+ 21  forecast     126314 non-null  float64
+ 22  notes        5424 non-null    object
+ 23  date_played  126314 non-null  datetime64[ns]
+ 24  difference   126314 non-null  int64
+dtypes: datetime64[ns](1), float64(6), int64(8), object(10)
+memory usage: 24.1+ MB
+df.shape
+(126314, 25)
+elo_columns = ["elo_i", "elo_n", "opp_elo_i", "opp_elo_n"]
+df.drop(elo_columns, inplace=True, axis=1)
+df.shape
+(126314, 21)
+df["game_location"].nunique()
+3
+df["game_location"].value_counts()
+A    63138
+H    63138
+N       38
+Name: game_location, dtype: int64
+countries = pd.DataFrame({
+    "population_millions": [17, 127, 37],
+    "continent": ["Europe", "Asia", "North America"]
+}, index= ["Holland", "Japan", "Canada"])
+pd.merge(cities, countries, left_on="country", right_index=True)
+pd.merge(
+    cities,
+    countries,
+    left_on="country",
+    right_index=True,
+    how="left"
+)
